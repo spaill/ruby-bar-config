@@ -57,6 +57,50 @@ class Widget
   end
 end
 
+class MultiWidget < Widget
+  # +tag+ identifies this widget in ruby-bar commands
+  # +fifo+ is a file where ruby-bar commands are written
+  # +widgets+ is a hash of non-multi-widgets
+  def initialize(tag, fifo, widgets)
+    @tag = tag
+    @fifo = fifo
+    @widgets = widgets
+    @widgets.each do |t,w|
+      w.mark_dirty = lambda { signal_if_visible(t) }
+      w.colour_query = lambda { |colour_name| get_colour(colour_name) }
+    end
+    @index = 0
+  end
+
+  def task
+    @widgets.each do |t,w|
+      w.run
+    end
+  end
+
+  def update(str)
+    @widgets[@widgets.keys[@index]].update(str)
+    signal_if_visible(@index)
+  end
+
+  def scrollable(str)
+    "%{A3:echo \"S#{@tag}\" > #{@fifo}:}#{str}%{A}"
+  end
+
+  # Forwards updates from visible child widgets
+  def signal_if_visible(tag)
+    if (@widgets.keys.index(tag) == @index)
+      @str = scrollable(@widgets[@widgets.keys[@index]].read)
+      signal_parent
+    end
+  end
+
+  def switch
+    @index = (@index + 1) % @widgets.size
+    signal_if_visible(@index)
+  end
+end
+
 # A widget displaying a clock
 class ClockWidget < Widget
   # +format+ is a standard +Time+ format string as passed to +Time.strftime+
@@ -95,6 +139,17 @@ class VolumeWidget < Widget
       @str = default_markup(volume)
       signal_parent
       sleep 2
+    end
+  end
+end
+
+# A widget displaying current song via MPC
+class MPCStatusWidget < Widget
+  def task
+    loop do
+      @str = `mpc current`.strip
+      signal_parent
+      sleep 10
     end
   end
 end

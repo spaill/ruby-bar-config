@@ -11,12 +11,14 @@ class BarConfig
   # * +:wm_name+ is the panel +WM_NAME' X property.
   # * +:bar_height+ is the height in pixels of the bar
   # * +:bar_font+ is the font string sent to the bar. If using xft, use {krypt-n fork of LemonBar}[https://github.com/krypt-n/bar]
+  # * +:bar_fifo+ is the path to a fifo special file where ruby-bar listens for commands
   # * +:colour_file+ is the name of a JSON file with colour definitions. *Required*
   def initialize(params = {})
     defaults = {
       wm_name: 'bspwm-panel',
       bar_height: 16,
       bar_font: 'Kochi Gothic,東風ゴシック:style=Regular:size=9',
+      bar_fifo: '/tmp/ruby-bar',
     }
     @settings = defaults.merge params
     raise "You must specify a colour file" if @settings[:colour_file].nil?

@@ -52,6 +52,5 @@ class LemonBar
         button_shell_pipe.puts line
       end
     end
-    sleep
   end
 end
